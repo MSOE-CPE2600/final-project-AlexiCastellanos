@@ -1,3 +1,0 @@
-Candidate A: 4
-Candidate B: 2
-Candidate C: 4
