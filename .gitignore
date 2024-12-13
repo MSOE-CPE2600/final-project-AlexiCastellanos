@@ -1,0 +1,12 @@
+# Object files
+*.o
+
+# Dependency files
+*.d
+
+# Executable files
+client
+server
+
+# Output results
+voting_results.txt

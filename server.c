@@ -1,3 +1,14 @@
+/**
+* Name: Alexi Castellanos
+* Filename: server.c
+* CPE2600 - Lab 13 Final Project
+*
+* Description:This program acts as the backend for a voting system, handling shared memory
+* to store votes and voter information. The server ensures that the voting
+* process runs smoothly and records the results upon termination.
+*
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,33 +17,35 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define SHM_NAME "/voting_shm"
-#define MAX_VOTERS 100
-#define MAX_NAME_LEN 50
+// Define shared memory name and constants
+#define SHM_NAME "/voting_shm"  // Name of the shared memory segment
+#define MAX_VOTERS 100          // Maximum number of voters
+#define MAX_NAME_LEN 50         // Maximum length of a voter's username
 
+// Structure to hold voting data
 typedef struct {
-    int vote_count[3];                           // Vote counts for (A), (B), (C)
-    int total_votes;                             // Total votes cast
-    char voters[MAX_VOTERS][MAX_NAME_LEN];       // List of voter usernames to ensure no duplicates
-    int voter_count;                             // Number of unique voters
+    int vote_count[3];                 // Array to store vote counts for candidates A, B, and C
+    int total_votes;                   // Total number of votes cast
+    char voters[MAX_VOTERS][MAX_NAME_LEN]; // Array to store usernames of voters
+    int voter_count;                   // Count of unique voters
 } SharedData;
 
-SharedData *data;
-int shm_fd;
+SharedData *data;  // Pointer to shared memory data
+int shm_fd;        // File descriptor for shared memory
 
-// Signal handler for graceful shutdown
+// Signal handler for graceful shutdown.
 void handle_sigint(int sig) {
-    (void)sig;  
+    (void)sig;  // Suppress unused parameter warning
 
     printf("\nVoting ended. Final Results:\n");
-    printf(" Canidate 1(A): %d (%.2f%%)\n", data->vote_count[0],(data->vote_count[0] * 100.0) / data->total_votes);
-    printf(" Canidate 2(B): %d (%.2f%%)\n", data->vote_count[1],(data->vote_count[1] * 100.0) / data->total_votes);
-    printf(" Canidate 3(C): %d (%.2f%%)\n", data->vote_count[2],(data->vote_count[2] * 100.0) / data->total_votes);
+    printf(" Candidate 1 (A): %d (%.2f%%)\n", data->vote_count[0], (data->vote_count[0] * 100.0) / data->total_votes);
+    printf(" Candidate 2 (B): %d (%.2f%%)\n", data->vote_count[1], (data->vote_count[1] * 100.0) / data->total_votes);
+    printf(" Candidate 3 (C): %d (%.2f%%)\n", data->vote_count[2], (data->vote_count[2] * 100.0) / data->total_votes);
 
     // Write results to a file
     FILE *file = fopen("voting_results.txt", "w");
     if (file) {
-        fprintf(file, "(A): %d\n(B): %d\n(C): %d\n",
+        fprintf(file, "Candidate A: %d\nCandidate B: %d\nCandidate C: %d\n",
                 data->vote_count[0], data->vote_count[1], data->vote_count[2]);
         fclose(file);
     } else {
@@ -55,9 +68,8 @@ void handle_sigint(int sig) {
 }
 
 int main() {
+    // Register signal handler for graceful shutdown
     signal(SIGINT, handle_sigint);
-
-   // printf("Size of SharedData: %lu bytes\n", sizeof(SharedData));  // Debug print
 
     // Create shared memory
     shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
@@ -66,6 +78,7 @@ int main() {
         exit(1);
     }
 
+    // Set size of shared memory
     if (ftruncate(shm_fd, sizeof(SharedData)) == -1) {
         perror("Error setting size of shared memory");
         close(shm_fd);
@@ -73,6 +86,7 @@ int main() {
         exit(1);
     }
 
+    // Map shared memory to process address space
     data = (SharedData *)mmap(NULL, sizeof(SharedData), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (data == MAP_FAILED) {
         perror("Error mapping shared memory");
@@ -81,18 +95,19 @@ int main() {
         exit(1);
     }
 
-    memset(data, 0, sizeof(SharedData));  // Initialize shared memory
-   // printf("Shared memory created and attached successfully!\n");
+    // Initialize shared memory data
+    memset(data, 0, sizeof(SharedData));
+
     printf("Voting server started. Press Ctrl+C to stop voting.\n");
 
+    // Monitor for new votes
     int last_total_votes = 0;
-
     while (1) {
         if (data->total_votes > last_total_votes) {
             printf("New vote received! Total votes: %d\n", data->total_votes);
             last_total_votes = data->total_votes;
         }
-        sleep(1);
+        sleep(1);  // Pause to reduce CPU usage
     }
 
     return 0;
