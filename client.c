@@ -24,6 +24,7 @@ int has_voted(SharedData *data, const char *username) {
     return 0;
 }
 
+// Display available candidates
 void print_choices() {
     printf("Available Candidates:\n");
     printf("A: Candidate 1\n");
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
     char *candidate_str = NULL;
     int opt;
 
-    // Display available candidates
+    
     
 
     // Parse command-line arguments using getopt
