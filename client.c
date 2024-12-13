@@ -53,8 +53,8 @@ void print_choices() {
 void print_usage(const char *prog_name) {
     print_choices();
     printf("Usage: %s -u <username> -c <candidate>\n", prog_name);
-    printf("    -u <username>   Specify your username\n");
-    printf("    -c <candidate>  Specify candidate (A, B, or C)\n");
+    printf("-u <username>   Specify your username\n");
+    printf("-c <candidate>  Specify candidate (A, B, or C)\n");
 }
 
 int main(int argc, char *argv[]) {
